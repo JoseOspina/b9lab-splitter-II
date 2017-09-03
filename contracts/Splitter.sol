@@ -59,26 +59,34 @@ contract Splitter {
 
 	/* pattern in which receiver 1 and 2 can withdraw their funds
 		instead of sending them every time funds arrive */
-	function getReceiver1Funds() public {
-		if (msg.sender != receiver1) throw;
-		var fundsToSend = receiver1Balance;
-		/* reset funds before sending */
-		receiver1Balance = 0;
-		if(!receiver1.send(fundsToSend)) {
-			/* sent failed, so keep the funds available */
-			receiver1Balance = fundsToSend;
-		}
-	}
+	function getMyFunds() public returns (bool success){
+		if (msg.sender != receiver1 && msg.sender != receiver2) throw;
 
-	function getReceiver2Funds() public {
-		if (msg.sender != receiver1) throw;
-		var fundsToSend = receiver2Balance;
-		/* reset funds before sending */
-		receiver2Balance = 0;
-		if(!receiver2.send(fundsToSend)) {
-			/* sent failed, so keep the funds available */
-			receiver2Balance = fundsToSend;
+		uint fundsToSend;
+
+		if (msg.sender == receiver1) {
+			fundsToSend = receiver1Balance;
+			/* reset funds before sending */
+			receiver1Balance = 0;
+			if(!receiver1.send(fundsToSend)) {
+				/* sent failed, so keep the funds available */
+				receiver1Balance = fundsToSend;
+			}
+			return true;
 		}
+
+		if (msg.sender == receiver2) {
+			fundsToSend = receiver2Balance;
+			/* reset funds before sending */
+			receiver2Balance = 0;
+			if(!receiver2.send(fundsToSend)) {
+				/* sent failed, so keep the funds available */
+				receiver2Balance = fundsToSend;
+			}
+			return true;
+		}
+
+		return false;
 	}
 
 	function kill() public {
