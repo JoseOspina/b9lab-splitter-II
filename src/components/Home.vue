@@ -86,6 +86,16 @@
     </div>
 
     <br>
+    <h2>Log</h2>
+    <div class="w3-row">
+      <h4 v-if="events.length === 0">(empty)</h4>
+      <ul class="w3-ul w3-card-2">
+        <li v-for="event in lastEvents">{{ event }}</li>
+      </ul>
+    </div>
+
+
+    <br>
   </div>
 </template>
 
@@ -111,7 +121,8 @@ export default {
       receiver2Balance: 0,
       valueToSend: 0,
       receiver1BalanceInSplitter: 0,
-      receiver2BalanceInSplitter: 0
+      receiver2BalanceInSplitter: 0,
+      events: []
     }
   },
 
@@ -132,6 +143,15 @@ export default {
       }
 
       return 0
+    },
+    lastEvents () {
+      return this.events
+      // events are not well ordered always. Spcific sorting logic needed
+      // if (this.events.length > 5) {
+      //   return this.events.slice(this.events.length - 5 - 1, this.events.length - 1)
+      // } else {
+      //   return this.events
+      // }
     }
   },
 
@@ -193,6 +213,9 @@ export default {
       if (address === '0x0000000000000000000000000000000000000000') {
         return
       }
+      if (address === '') {
+        return
+      }
       web3.eth.getBalance(address, (err, balance) => {
         if (err) {
           console.log(err)
@@ -245,6 +268,31 @@ export default {
     .then((sender) => {
       this.splitterSender = sender
       this.updateAll()
+
+      /* check events */
+      this.splitterInstance.LogFundsFromSenderReceived({}, { fromBlock: 0 })
+      .watch((err, event) => {
+        if (err) {
+          console.log(err)
+        }
+        this.events.push(Number(web3.fromWei(event.args.amount)) + ' ether sent by the Sender at block ' + event.blockNumber)
+      })
+
+      this.splitterInstance.LogReceiver1Withdrawed({}, { fromBlock: 0 })
+      .watch((err, event) => {
+        if (err) {
+          console.log(err)
+        }
+        this.events.push(Number(web3.fromWei(event.args.amount)) + ' ether withdrawn by the Rceiver 1 at block ' + event.blockNumber)
+      })
+
+      this.splitterInstance.LogReceiver2Withdrawed({}, { fromBlock: 0 })
+      .watch((err, event) => {
+        if (err) {
+          console.log(err)
+        }
+        this.events.push(Number(web3.fromWei(event.args.amount)) + ' ether withdrawn by the Receiver 2 at block ' + event.blockNumber)
+      })
     })
     .catch((err) => {
       console.log(err)

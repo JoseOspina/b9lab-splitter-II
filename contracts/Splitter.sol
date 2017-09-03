@@ -10,6 +10,12 @@ contract Splitter {
 	address public receiver2;
 	uint 		public receiver2Balance;
 
+	event   LogReceiver1Set(address receiverAddress);
+	event   LogReceiver2Set(address receiverAddress);
+	event   LogFundsFromSenderReceived(uint amount);
+	event   LogReceiver1Withdrawed(uint amount);
+	event   LogReceiver2Withdrawed(uint amount);
+
 
 	function Splitter() {
 		/* the person sending funds to be splitted
@@ -23,11 +29,13 @@ contract Splitter {
 	function setReceiver1(address _address) {
 		if (msg.sender != sender) throw;
 		receiver1 = _address;
+		LogReceiver1Set(receiver1);
 	}
 
 	function setReceiver2(address _address) {
 		if (msg.sender != sender) throw;
 		receiver2 = _address;
+		LogReceiver2Set(receiver2);
 	}
 
 	/* no reason to implement a balance when there is already
@@ -42,6 +50,7 @@ contract Splitter {
 		if (msg.sender == sender) {
 			receiver1Balance += msg.value / 2;
 			receiver2Balance += msg.value / 2;
+			LogFundsFromSenderReceived(msg.value);
 		}
 	}
 
@@ -72,6 +81,7 @@ contract Splitter {
 				/* sent failed, so keep the funds available */
 				receiver1Balance = fundsToSend;
 			}
+			LogReceiver1Withdrawed(fundsToSend);
 			return true;
 		}
 
@@ -83,6 +93,7 @@ contract Splitter {
 				/* sent failed, so keep the funds available */
 				receiver2Balance = fundsToSend;
 			}
+			LogReceiver2Withdrawed(fundsToSend);
 			return true;
 		}
 
