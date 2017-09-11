@@ -27,7 +27,7 @@ contract Splitter {
 		return true;
 	}
 
-	function getBalanceOf(address receiver) public returns (uint) {
+	function getBalanceOf(address receiver) public constant returns (uint) {
 		return balances[receiver];
 	}
 

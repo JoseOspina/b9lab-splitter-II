@@ -36,8 +36,8 @@
       </select>
     </div>
     <div class="w3-row">
-      <h3>You are the Sender of the splitter!</h3>
       <div class="w3-margin-top">
+        <label class="w3-left"><b>to:</b></label>
         <select class="w3-input" v-model="receiver1">
           <option v-for="account in accounts">
             {{ account.address }}
@@ -45,6 +45,7 @@
         </select>
       </div>
       <div class="w3-margin-top">
+        <label class="w3-left"><b>and:</b></label>
         <select class="w3-input" v-model="receiver2">
           <option v-for="account in accounts">
             {{ account.address }}
@@ -53,16 +54,16 @@
       </div>
     </div>
 
-    <div class="w3-row-padding w3-margin-top">
-      <div class="w3-col m8">
+    <div class="w3-row w3-margin-top">
+      <div class="w3-col s8">
         <input class="w3-input" type="number" v-model="valueToSend">
       </div>
-      <div class="w3-col m4 ">
+      <div class="w3-col s4 ">
         <button @click="sendFunds()" class="w3-button w3-blue w3-round-large">Send funds</button>
       </div>
     </div>
 
-    <div class="w3-row">
+    <div class="w3-row w3-margin-top">
       <button @click="withdrawFunds()" class="w3-button w3-blue w3-round-large">Get my funds!</button>
     </div>
 
@@ -112,36 +113,21 @@ export default {
           })
         }
 
-        /* correct way to loop with promises */
+        /* correct way to loop with promises it to use recursion */
         const getBalances = (ix) => {
           web3.eth.getBalancePromise(this.accounts[ix].address).then((balance) => {
-            console.log('balance received: ' + ix)
-            console.log(this.splitterInstance)
-            console.log(ix)
-            console.log('length:' + this.accounts.length)
-
             this.accounts[ix].balance = Number(web3.fromWei(balance))
-
-            // if (ix < this.accounts.length - 1) {
-            //   getBalances(ix + 1)
-            // }
-            console.log('address:' + this.accounts[ix].address)
             return this.splitterInstance.getBalanceOf(this.accounts[ix].address, { from: this.from })
           }).then((balance) => {
-            console.log('splitter balance received: ' + ix)
-            console.log(balance)
-            this.setAccountSplitterBalance(ix, balance)
+            this.accounts[ix].balanceInSplitter = Number(web3.fromWei(balance))
+            if (ix < this.accounts.length - 1) {
+              getBalances(ix + 1)
+            }
           })
         }
 
         getBalances(0)
       })
-    },
-    setAccountBalance (ix, balance) {
-
-    },
-    setAccountSplitterBalance (ix, balance) {
-      this.accounts[ix].balanceInSplitter = Number(web3.fromWei(balance))
     },
     sendFunds () {
       this.splitterInstance.split(this.receiver1, this.receiver2, { from: this.from, value: web3.toWei(this.valueToSend, 'ether') })
